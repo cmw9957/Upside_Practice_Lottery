@@ -34,9 +34,12 @@ contract Lottery {
     function draw() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to draw.");
         winNum = winningNumber();
-        winnings = vault_balance / lotteryCount[winNum];
+
+        uint count = lotteryCount[winNum];
+        if (count != 0) {
+            winnings = vault_balance / count;
+        }
         isDraw = true;
-        
     }
     
     function claim() external {
