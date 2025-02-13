@@ -22,6 +22,7 @@ contract Lottery {
 
     bool isDraw = false;
 
+    uint16 winNum;
     uint winnings = 0;
 
     constructor () {
@@ -41,13 +42,20 @@ contract Lottery {
 
     function draw() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to draw.");
-        winnings = vault_balance / lotteryCount[winningNumber()];
+        winNum = winningNumber();
+        winnings = vault_balance / lotteryCount[winNum];
         isDraw = true;
+        
     }
     
     function claim() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to claim.");
+        require(isDraw == true, "Draw must be conducted first.");
+        require(lotteryList[msg.sender] == winNum, "The lottery does not match.");
 
+        address recipient = msg.sender;
+        payable(recipient).transfer(winnings);
+        vault_balance -= winnings;
     }
 
     function winningNumber() public returns (uint16){
