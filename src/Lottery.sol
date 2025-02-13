@@ -45,7 +45,7 @@ contract Lottery {
     function claim() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to claim.");
         require(isDraw == true, "Draw must be conducted first.");
-        require(lotteryList[msg.sender] == winNum, "The lottery does not match.");
+        if (lotteryList[msg.sender] != winNum) return;
 
         address recipient = msg.sender;
         payable(recipient).transfer(winnings);
