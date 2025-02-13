@@ -45,12 +45,15 @@ contract Lottery {
     function claim() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to claim.");
         require(isDraw == true, "Draw must be conducted first.");
-        if (lotteryList[msg.sender] != winNum) return;
+        require(lotteryList[msg.sender] == winNum, "Winning number does not match.");
 
         address recipient = msg.sender;
-        payable(recipient).transfer(winnings);
+        (bool success, ) = payable(recipient).call{value: winnings}("");
+        require(success, "Transfer failed.");
+        
         vault_balance -= winnings;
     }
+
 
     function winningNumber() public returns (uint16){
         uint256 randomHash = uint256(
