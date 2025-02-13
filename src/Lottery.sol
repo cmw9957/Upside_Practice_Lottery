@@ -14,31 +14,39 @@ contract Lottery {
 
     mapping(address => uint) lotteryList;
     mapping(address => bool) buyList;
+    mapping(uint16 => uint) lotteryCount;
 
     uint public vault_balance;
 
     uint public startTime;
 
+    bool isDraw = false;
+
+    uint winnings = 0;
+
     constructor () {
         startTime = block.timestamp;
     }
 
-    function buy(uint lotteryNum) payable external {
+    function buy(uint16 lotteryNum) payable external {
         require(block.timestamp < startTime + 24 hours, "Too late to buy.");
         require(msg.value == 0.1 ether, "Insufficient funds.");
         require(buyList[msg.sender] != true, "Already exists.");
 
         vault_balance += msg.value;
         lotteryList[msg.sender] = lotteryNum;
+        lotteryCount[lotteryNum] += 1;
         buyList[msg.sender] = true;
     }
 
     function draw() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to draw.");
-        uint16 winNum = winningNumber();
+        winnings = vault_balance / lotteryCount[winningNumber()];
+        isDraw = true;
     }
     
     function claim() external {
+        require(block.timestamp >= startTime + 24 hours, "Too fast to claim.");
 
     }
 
