@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "forge-std/console.sol";
+
 contract Lottery {
 
     mapping(address => uint) lotteryList;
@@ -45,7 +47,6 @@ contract Lottery {
     function claim() external {
         require(block.timestamp >= startTime + 24 hours, "Too fast to claim.");
         require(isDraw == true, "Draw must be conducted first.");
-        require(lotteryList[msg.sender] == winNum, "Winning number does not match.");
 
         address recipient = msg.sender;
         (bool success, ) = payable(recipient).call{value: winnings}("");
