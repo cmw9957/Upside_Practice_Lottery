@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/console.sol";
-
-// interface ILottery {
-//     function buy(uint lotteryNum) payable external;
-//     function draw() external;
-//     function claim() external;
-//     function winningNumber() public returns (uint16);
-// }
-
 contract Lottery {
 
     mapping(address => uint) lotteryList;
@@ -59,6 +50,11 @@ contract Lottery {
     }
 
     function winningNumber() public returns (uint16){
-        return 0;
+        uint256 randomHash = uint256(
+            keccak256(
+                abi.encodePacked(block.timestamp, block.prevrandao, msg.sender)
+            )
+        );
+        return uint16(randomHash % 65536);
     }
 }
