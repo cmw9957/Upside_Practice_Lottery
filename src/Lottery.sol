@@ -9,50 +9,72 @@ contract Lottery {
     uint public vault_balance;
     uint public startTime;
     bool public isDraw = false;
-
     uint16 private winNum;
     uint private winnings = 0;
+
+    modifier isTimeToBuy() {
+        require(block.timestamp < startTime + 24 hours, "Too late to buy.");
+        _;
+    }
+
+    modifier isTimeToDraw() {
+        require(block.timestamp >= startTime + 24 hours, "Too fast to draw.");
+        _;
+    }
+
+    modifier isSufficientFunds() {
+        require(msg.value == 0.1 ether, "Insufficient funds.");
+        _;
+    }
+
+    modifier checkUserAlreadyBuy() {
+        require(!buyList[msg.sender], "Already exists.");
+        _;
+    }
+
+    modifier isDrawed() {
+        require(!isDraw, "Already drawed.");
+        _;
+    }
+
+    modifier isNotDrawed() {
+        require(isDraw, "Draw must be conducted first.");
+        _;
+    }
+
+    modifier checkTicket() {
+        require(buyList[msg.sender], "No ticket found.");
+        _;
+    }
 
     constructor() {
         startTime = block.timestamp;
     }
 
-    function buy(uint16 lotteryNum) external payable {
-        require(block.timestamp < startTime + 24 hours, "Too late to buy.");
-        require(msg.value == 0.1 ether, "Insufficient funds.");
-        require(!buyList[msg.sender], "Already exists.");
-
+    function buy(uint16 lotteryNum) external payable isTimeToBuy() isSufficientFunds() checkUserAlreadyBuy() {
         vault_balance += msg.value;
         lotteryList[msg.sender] = lotteryNum;
         lotteryCount[lotteryNum] += 1;
         buyList[msg.sender] = true;
     }
 
-    function draw() external {
-        require(block.timestamp >= startTime + 24 hours, "Too fast to draw.");
-        require(!isDraw, "Already draw.");
-
+    function draw() external isTimeToDraw() isDrawed() {
         winNum = winningNumber();
         uint count = lotteryCount[winNum];
 
-        if (count > 0) {
+        if (count > 0) { // preventation divide by zero
             winnings = vault_balance / count;
         }
 
         isDraw = true;
     }
 
-    function claim() external {
-        require(isDraw, "Draw must be conducted first.");
-        require(buyList[msg.sender], "No ticket found.");
-
+    function claim() external isNotDrawed() checkTicket() {
         uint16 userNum = lotteryList[msg.sender];
 
         if (userNum == winNum) {
-            uint winningAmount = winnings;
-            vault_balance -= winningAmount;
-
-            (bool success, ) = payable(msg.sender).call{value: winningAmount}("");
+            vault_balance -= winnings;
+            (bool success, ) = payable(msg.sender).call{value: winnings}("");
             require(success, "Transfer failed.");
         }
 
@@ -68,7 +90,7 @@ contract Lottery {
         }
     }
 
-    function winningNumber() public returns (uint16) {
+    function winningNumber() public view returns (uint16) {
         return uint16(
             uint256(
                 keccak256(
