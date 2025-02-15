@@ -67,6 +67,7 @@ contract Lottery {
         hasPurchased[msg.sender] = true;
     }
 
+    // winningNumber 생성 후, 분배 금액 계산
     function draw() external isTimeToDraw() isNotDrawed() {
         winNum = winningNumber();
         uint count = lotteryNumCount[winNum];
@@ -78,6 +79,9 @@ contract Lottery {
         isDraw = true;
     }
 
+    // 사용자가 구매한 lottery number를 검증 후, 분배 금액만큼 지급
+    // 사용자 정보를 초기화해 구매하지 않은 상태로 전환
+    // vault_balance 값이 0으로 모두 수령한 경우나 해당하는 winningNumber를 구매하지 않았을 경우 다음 라운드로 이월)
     function claim() external isDrawed() isBuy() {
         uint16 userNum = lotteryList[msg.sender];
 
@@ -99,6 +103,7 @@ contract Lottery {
         }
     }
 
+    // 예측하기 어려운 uint16 값 return
     function winningNumber() public view returns (uint16) {
         return uint16(
             uint256(
